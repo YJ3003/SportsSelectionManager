@@ -1,8 +1,7 @@
 import streamlit as st
 import os
 import subprocess
-subprocess.check_call(["pip", "install", "-r", os.path.join(os.path.abspath("."), "requirements.txt")])
-
+# subprocess.check_call(["pip", "install", "-r", os.path.join(os.path.abspath("."), "requirements.txt")])
 import tempCodeRunnerFile
 
 # Install required libraries
