@@ -2,8 +2,8 @@ import streamlit as st
 import os
 import subprocess
 subprocess.check_call(["pip", "install", "-r", os.path.join(os.path.abspath("."), "requirements.txt")])
-
-from tempCodeRunnerFile import df, sports_group, send_emails
+subprocess.run(["python", "tempCodeRunnerFile.py"])
+# from tempCodeRunnerFile import df, sports_group, send_emails
 
 # Install required libraries
 
