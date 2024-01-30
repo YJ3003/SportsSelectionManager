@@ -3,7 +3,7 @@ import os
 import subprocess
 subprocess.check_call(["pip", "install", "-r", os.path.join(os.path.abspath("."), "requirements.txt")])
 
-from tempCodeRunnerFile import df, sports_group, send_emails
+import tempCodeRunnerFile
 
 # Install required libraries
 
@@ -15,7 +15,7 @@ try:
         st.session_state.selected_sport = None
 
     # Create a select box to choose the sports group
-    st.session_state.selected_sport = st.selectbox("Enter sports", sports_group, index=0)
+    st.session_state.selected_sport = st.selectbox("Enter sports", tempCodeRunnerFile.sports_group, index=0)
 
 
     # Add a text input box with an initial value
@@ -25,10 +25,10 @@ try:
 
     # Send emails when the button is clicked
     if st.button("Send Emails"):
-        send_emails(sport,sub, msg)
+        tempCodeRunnerFile.send_emails(sport,sub, msg)
         st.write(f"Emails to {sport} sent successfully!")
     
-    st.write(df)
+    st.write(tempCodeRunnerFile.df)
 
 
 except Exception as e:
