@@ -1,15 +1,11 @@
 import pandas as pd
 import streamlit as st
 import smtplib
-import tkinter as tk
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from flask import Flask, render_template
 from pydrive.auth import GoogleAuth 
 from pydrive.drive import GoogleDrive 
 from sqlalchemy import create_engine, text
-import tkinter as tk
-from tkinter import ttk
 
 #---------------------------------GOOGLE AUTHENTICATION---------------------------------
 
