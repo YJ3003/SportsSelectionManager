@@ -5,6 +5,8 @@ from tempCodeRunnerFile import df, sports_group, send_emails
 
 # Install required libraries
 subprocess.check_call(["pip", "install", "-r", os.path.join(os.path.abspath("."), "requirements.txt")])
+subprocess.run(["python", "tempCodeRunnerFile.py"])
+
 
 try:
     # Create a session state
