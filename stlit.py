@@ -1,15 +1,26 @@
 import streamlit as st
 import os
-# import subprocess
-# import json
+import subprocess
+import json
 # subprocess.check_call(["pip", "install", "-r", os.path.join(os.path.abspath("."), "requirements.txt")])
-
 # result_str = subprocess.run(["python", "tempCodeRunnerFile.py"], capture_output=True, text=True)
 # result_dict = json.loads(result_str.stdout)
 # df = result_dict['df']
 # sports_group = result_dict['sports_group']
 # send_emails = result_dict['send_emails']
-from tempCodeRunnerFile import df, sports_group, send_emails
+# from tempCodeRunnerFile import df, sports_group, send_emails
+
+def run_script(script_path):
+    with open(script_path, 'r') as file:
+        script_code = file.read()
+    result_dict = {}
+    exec(script_code, result_dict)
+    return result_dict
+
+result_dict = run_script("tempCodeRunnerFile.py")
+df = result_dict['df']
+sports_group = result_dict['sports_group']
+send_emails = result_dict['send_emails']
 
 # Install required libraries
 
