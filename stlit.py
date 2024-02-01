@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-import subprocess
+# import subprocess
 # import json
 # subprocess.check_call(["pip", "install", "-r", os.path.join(os.path.abspath("."), "requirements.txt")])
 
