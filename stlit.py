@@ -1,51 +1,154 @@
 import streamlit as st
-import os
-import subprocess
-import json
-# subprocess.check_call(["pip", "install", "-r", os.path.join(os.path.abspath("."), "requirements.txt")])
-# result_str = subprocess.run(["python", "tempCodeRunnerFile.py"], capture_output=True, text=True)
-# result_dict = json.loads(result_str.stdout)
-# df = result_dict['df']
-# sports_group = result_dict['sports_group']
-# send_emails = result_dict['send_emails']
-# from tempCodeRunnerFile import df, sports_group, send_emails
+import pandas as pd
+import streamlit as st
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from pydrive.auth import GoogleAuth 
+from pydrive.drive import GoogleDrive 
+from sqlalchemy import create_engine, text
 
-def run_script(script_path):
-    with open(script_path, 'r') as file:
-        script_code = file.read()
-    result_dict = {}
-    exec(script_code, result_dict)
-    return result_dict
+#---------------------------------GOOGLE AUTHENTICATION---------------------------------
 
-result_dict = run_script("tempCodeRunnerFile.py")
-df = result_dict['df']
-sports_group = result_dict['sports_group']
-send_emails = result_dict['send_emails']
+print("Your browser will open now so please select your google account and click on continue to complete the authentication.\n")
 
-# Install required libraries
+# Initializing a GoogleAuth Object 
+gauth = GoogleAuth() 
+
+# client_secrets.json file is verified and it automatically handles authentication 
+gauth.LocalWebserverAuth() 
+
+# GoogleDrive Instance is created using authenticated GoogleAuth instance 
+drive = GoogleDrive(gauth) 
+
+# Initialize GoogleDriveFile instance with file id 
+file_obj = drive.CreateFile({'id': '1-je2pJlmZlX7nXrNGezR2YyRk-4PL52FATKiRAh0_QI'})   #File ID of the Response xls File ( The thing after /d/ in your xls response sheet )
+file_obj.GetContentFile('REGISTRATION(F) (Responses).xls',                                  #Name of xls file
+		mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') 
+
+df = pd.read_excel('REGISTRATION(F) (Responses).xls') 
+
+#---------------------------------------------------------------------------------------
+
+
+
+#------------------------------MYSQL AUTHENTICATION & FETCH-----------------------------
+
+# MySQL database configuration
+db_username = 'root'						#input("Enter your username (Usually 'root'): ")
+db_password = 'mysqlyug' 					#input("Enter your MySQL Password: ")
+db_host = 'localhost'
+db_name = 'sports'
+
+# Create a SQLAlchemy engine
+engine = create_engine(f'mysql+mysqlconnector://{db_username}:{db_password}@{db_host}/{db_name}')
+
+table_name = 'SRTable'
+df.to_sql(table_name, con=engine, if_exists='replace', index=True, index_label = "S. No.")
+
+# Define the MySQL SELECT statement as a string
+
+connection = engine.connect()
+sport_stmt = text("SELECT `Game previously participated` from SRTable")
+sports = connection.execute(sport_stmt)
+sports_group = list(set([i[0] for i in sports.fetchall()]))
+
+#---------------------------------------------------------------------------------------
+
+
+#---------------------------------------SMTP--------------------------------------------
+
+# Email server settings
+email_address = "yugtatiya@gmail.com"
+email_password = "ntdu edbg ikre yces"              #An app password is generated for security purposes
+smtp_server = "smtp.gmail.com"
+smtp_port = 587 
+
+# Email content
+subject = ""
+message = ""
+
+#Creates a function that sends email
+def send_email(to_email, bcc_emails, subject, message):
+    # Create message
+    msg = MIMEMultipart()
+    msg['From'] = email_address
+    msg['To'] = ", ".join(to_email)
+    msg['Bcc'] = ", ".join(bcc_emails)
+    msg['Subject'] = subject
+
+    # Attach the message to the email
+    msg.attach(MIMEText(message, 'plain'))
+
+    # Connect to the SMTP server with TLS
+    with smtplib.SMTP(smtp_server, smtp_port) as server:
+        server.starttls()
+        server.login(email_address, email_password)
+
+        # Send the email
+        server.sendmail(email_address, to_email + bcc_emails, msg.as_string())
+
+#Sends the emails only to the selected sports group
+def send_emails(sports,sub,mesg):
+    selected_sports_group = sports
+    # Fetch emails from MySQL based on the selected sports group
+    mysql_stmt = text(f"SELECT `email address` FROM SRTable WHERE `Game previously participated` = '{selected_sports_group}'")
+    result = connection.execute(mysql_stmt)
+    bcc_emails = [row[0] for row in result]
+
+    # Send emails to each recipient
+    send_email(["cayugjain@gmail.com"], bcc_emails, sub, mesg)
+
+#---------------------------------------------------------------------------------------
+
+
+#__________________________________________________________
+
 
 
 try:
-    # Create a session state
+    # Creating a session state
+    st.image("RVLogo.jpeg", width=150)
     st.title("SPORTS SELECTION MANAGER")
     if 'selected_sport' not in st.session_state:
         st.session_state.selected_sport = None
 
-    # Create a select box to choose the sports group
+    # Dropdown Menu for sports selection
     st.session_state.selected_sport = st.selectbox("Enter sports", sports_group, index=0)
 
+    #A frame for the mail
+    frame = st.container(border=True)
+    frame.write("Mail Box")
 
-    # Add a text input box with an initial value
-    sub = st.text_input("Enter your subject:", value="<subject_line>")
-    msg = st.text_input("Enter your message:", value="<message_line>")
-    sport = st.session_state['selected_sport']
+    subject_input = frame.text_input("Enter a subject:", max_chars=100, key="subject_input", placeholder="Subject...")
+    message_input = frame.text_area("Enter a message:", height=200, key="message_input", placeholder="Type your message here...")
+    uploaded_file = frame.file_uploader("Choose a PDF file", type=["pdf"])
+
+    if uploaded_file is not None:
+        file_bytes = uploaded_file.getvalue()            #Converting pdf into byte form
+
+    sport = st.session_state['selected_sport']      #Getting sport value
 
     # Send emails when the button is clicked
     if st.button("Send Emails"):
-        send_emails(sport,sub, msg)
+        send_emails(sport,subject_input, message_input, pdf = file_bytes)
         st.write(f"Emails to {sport} sent successfully!")
     
-    st.write(df)
+
+    #Searching with USN
+    usn_input = st.text_input('Enter Branch')
+
+    if usn_input:
+        filtered_df = df[df['Branch'] == usn_input]
+        
+        # If a row with that name exists, display it
+        if not filtered_df.empty:
+            st.write('Row with USN', usn_input, ':', filtered_df)
+        else:
+            st.write('No row found with USN', usn_input)
+    
+    column_names = st.multiselect('Select columns:', df.columns, default=['USN','Name of the Student','Email address', 'Game previously participated'])
+    st.dataframe(df[column_names])
 
 
 except Exception as e:
