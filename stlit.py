@@ -1,7 +1,7 @@
-import subprocess
-import os
+# import subprocess
+# import os
 
-subprocess.check_call(["pip", "install", "-r", os.path.join(os.path.abspath("."), "requirements.txt")])
+# subprocess.check_call(["pip", "install", "-r", os.path.join(os.path.abspath("."), "requirements.txt")])
 
 import streamlit as st
 import pandas as pd
