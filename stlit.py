@@ -13,6 +13,10 @@ from flask import Flask, redirect, url_for, session
 from google.oauth2 import id_token
 from google.auth.transport.requests import Request
 import google.auth.exceptions
+import subprocess
+import os
+
+subprocess.check_call(["pip", "install", "-r", os.path.join(os.path.abspath("."), "requirements.txt")])
 
 
 
