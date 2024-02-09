@@ -31,7 +31,7 @@ def get_session_store():
 if 'email' not in st.session_state:
     st.write('Please log in to access the app.')
     if st.button('Log In'):
-        webbrowser.open('http://localhost:8500/login')  # Replace with your Flask app URL
+        webbrowser.open('http://localhost:5000/login')  # Replace with your Flask app URL
 else:
     # Authenticate using the user's access token stored in the Flask app's session
     gauth = GoogleAuth()
