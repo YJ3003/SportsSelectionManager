@@ -84,7 +84,7 @@ def google_callback():
     return redirect('https://rvcesports.streamlit.app/')  # Replace with your Streamlit app URL
 
 if __name__ == '__main__':
-    app.run(port=8500)
+    app.run(port=8503)
 
 #---------------------------------GOOGLE AUTHENTICATION---------------------------------
 
