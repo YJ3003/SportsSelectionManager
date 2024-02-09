@@ -48,7 +48,7 @@ with open('client_secrets.json') as f:
     client_secrets = json.load(f)
 
 # Define the client secret as a string
-CLIENT_SECRET = client_secrets['web']['client_secret']
+CLIENT_SECRET = client_secrets['installed']['client_secret']
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
