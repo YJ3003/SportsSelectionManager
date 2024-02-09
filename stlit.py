@@ -7,19 +7,91 @@ from email.mime.multipart import MIMEMultipart
 from pydrive.auth import GoogleAuth 
 from pydrive.drive import GoogleDrive 
 from sqlalchemy import create_engine, text
+import webbrowser
+import json
+from flask import Flask, redirect, url_for, session
+from google.oauth2 import id_token
+from google.auth.transport.requests import Request
+import google.auth.exceptions
+
+
+
+def get_session_store():
+    if not session.get('store'):
+        session['store'] = {}
+    return session['store']
+
+
+if 'email' not in st.session_state:
+    st.write('Please log in to access the app.')
+    if st.button('Log In'):
+        webbrowser.open('http://localhost:8500/login')  # Replace with your Flask app URL
+else:
+    # Authenticate using the user's access token stored in the Flask app's session
+    gauth = GoogleAuth()
+    session_store = get_session_store()
+    session_store.save()
+    gauth.LoadCredentialsFile(session_store.path)
+    drive = GoogleDrive(gauth)
+
+    # Use the `drive` object to upload or download files, create or delete folders, etc.
+    st.write(f'Welcome, {st.session_state["email"]}!')
+
+
+with open('client_secrets.json') as f:
+    client_secrets = json.load(f)
+
+# Define the client secret as a string
+CLIENT_SECRET = client_secrets['web']['client_secret']
+
+app = Flask(__name__)
+app.secret_key = 'your_secret_key'
+
+@app.route('/login')
+def login():
+    # Get the URL for the Google login page
+    google_auth_url = id_token.generate_login_url(
+        'https://rvcesports.streamlit.app//google_callback',  # Replace with your Streamlit app URL
+        access_type='offline',
+        prompt='consent',
+        scope=['openid', 'email', 'profile', 'https://www.googleapis.com/auth/drive']
+    )
+    return redirect(google_auth_url)
+
+@app.route('/google_callback')
+def google_callback():
+    # Verify the user's credentials
+    try:
+        idinfo = id_token.verify_oauth2_token(
+            Flask.request.args['idtoken'],
+            Request(),
+            CLIENT_SECRET
+        )
+    except google.auth.exceptions.InvalidTokenError:
+        return 'Invalid token', 401
+
+    # Save the user's email address and access token in the session
+    session['email'] = idinfo['email']
+    session['access_token'] = idinfo['at_hash']
+
+    # Redirect the user back to your Streamlit app
+    return redirect('https://rvcesports.streamlit.app/')  # Replace with your Streamlit app URL
+
+if __name__ == '__main__':
+    app.run(port=8500)
 
 #---------------------------------GOOGLE AUTHENTICATION---------------------------------
 
-print("Your browser will open now so please select your google account and click on continue to complete the authentication.\n")
+# print("Your browser will open now so please select your google account and click on continue to complete the authentication.\n")
 
-# Initializing a GoogleAuth Object 
-gauth = GoogleAuth() 
+# # Initializing a GoogleAuth Object 
+# gauth = GoogleAuth() 
 
-# client_secrets.json file is verified and it automatically handles authentication 
-gauth.LocalWebserverAuth() 
+# # client_secrets.json file is verified and it automatically handles authentication 
+# gauth.LocalWebserverAuth() 
 
-# GoogleDrive Instance is created using authenticated GoogleAuth instance 
-drive = GoogleDrive(gauth) 
+# # GoogleDrive Instance is created using authenticated GoogleAuth instance 
+# drive = GoogleDrive(gauth) 
 
 # Initialize GoogleDriveFile instance with file id 
 file_obj = drive.CreateFile({'id': '1-je2pJlmZlX7nXrNGezR2YyRk-4PL52FATKiRAh0_QI'})   #File ID of the Response xls File ( The thing after /d/ in your xls response sheet )
